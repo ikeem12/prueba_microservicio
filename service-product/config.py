@@ -13,6 +13,10 @@ class TestingConfig(Config):
     Testing = True
 
 class productionConfig(Config):
-    DEBUG = False
-    Testing = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+
+config = {
+    'development': developmentConfig,
+    'testing': TestingConfig,
+    'production': productionConfig
+}

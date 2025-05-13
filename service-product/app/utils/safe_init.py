@@ -10,7 +10,7 @@ class SafeInit:
     exceptions are logged and the application exits if initialization
     fails.
     """
-    def __init__(self, *args: Any, init_fn: Callable[..., Any], name: str, app_logger: Logger, ) -> None:
+    def __init__(self, *args: Any, init_fn: Callable[..., Any], name: str, app_logger: Logger) -> None:
         """
         Create a SafeInit instance and immediately run the initialization.
 
