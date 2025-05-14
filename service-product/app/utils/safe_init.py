@@ -1,43 +1,36 @@
-import sys
-from logging import Logger
 from typing import Callable, Any
+
+from utils.exceptions import ComponentInitializationError
 
 class SafeInit:
     """
-    A class to safely initialize components with error handling and logging.
+    Utility class to perform safe, one-off initialization of application components.
 
-    This class provides a method to initialize components, ensuring that any
-    exceptions are logged and the application exits if initialization
-    fails.
+    Executes a provided initialization function with its arguments during construction.
+    If the initialization fails, it raises a ComponentInitializationError with context.
+
+    This class delegates error handling to the caller, making it suitable for use in
+    controlled startup sequences (e.g., inside `create_app` functions).
+
+    Attributes:
+        _args (tuple): Positional arguments for the initialization function.
+        _init_fn (Callable): The initialization function (e.g., db.init_app).
+        _name (str): Human-readable name of the component, for error messages.
     """
-    def __init__(self, *args: Any, init_fn: Callable[..., Any], name: str, app_logger: Logger) -> None:
-        """
-        Create a SafeInit instance and immediately run the initialization.
-
-        Args:
-            init_fn (Callable[..., Any]): The function or method used to initialize
-                a component (e.g., db.init_app, migrate.init_app).
-            args (tuple[Any, ...]): Positional arguments to pass to init_fn.
-            name (str): Human-readable name of the component being initialized,
-                used in log messages.
-            app_logger (Logger): Logger used to record status and errors.
-        """
+    def __init__(self, *args: Any, init_fn: Callable[..., Any], name: str):
         self._args = args
         self._init_fn = init_fn
         self._name = name
-        self._app_logger = app_logger
         self._run()
 
     def _run(self) -> None:
         """
-        Execute the initialization function and handle exceptions.
+        Executes the initialization logic.
 
-        On success, logs an INFO-level message. On failure, logs a CRITICAL-level
-        message including the exception traceback and terminates the program.
+        Calls the provided function with its arguments. If an exception occurs,
+        it wraps it in a ComponentInitializationError with the component name.
         """
         try:
             self._init_fn(*self._args)
-            self._app_logger.info("%s initialized successfully.", self._name)
         except Exception as e:
-            self._app_logger.critical("Failed to initialize %s: %s", self._name, e, exc_info=True)
-            sys.exit(1)
+            raise ComponentInitializationError(f"Failed to initialize {self._name}: {e}")

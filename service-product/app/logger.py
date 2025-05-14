@@ -5,49 +5,58 @@ from logging.config import dictConfig
 from flask import Flask
 
 class MaxLevelFilter(logging.Filter):
-    """**Custom filter to limit log messages to a maximum level.**
+    """Filter that allows log messages up to a specified maximum level.
 
-    This filter allows only log messages that are less than or equal to the specified level.
-    It is used to control the verbosity of log messages in the logging system.
-
-    Args:
-        max_level (int): The maximum log level allowed. Messages with a higher level will be filtered out.
+    This is useful for directing lower-severity logs (e.g., INFO, DEBUG) to a specific handler
+    while excluding higher-severity messages (e.g., ERROR)
+    
+    Attributes:
+        max_level (int): The maximum log level to allow. Messages with a level higher than this will be filtered out.
     """
-
     def __init__(self, level: int):
         super().__init__()
         self.max_level = level
 
     def filter(self, record: logging.LogRecord) -> bool:
+        """Filter method to determine if a log record should be processed.
+        Args:
+            record (logging.LogRecord): The log record to evaluate.
+        
+        Returns:
+            bool: True if the log record's level is less than or equal to max_level, False otherwise.
+        """
         return record.levelno <= self.max_level
 
 
 def configure_logging(app: Flask) -> logging.Logger:
     """
-    Configure the system logging for the Flask application.
+    Configures structured logging for the Flask application.
 
-    This function use `dictConfig`for configuring the logging system for the Flask application.
-    Three handlers (console, error_file, info_file) and two formatters (“standard” and “detailed”) 
-    are created to handle different levels of logs and formats. (“standard” and “detailed”) 
-    to handle different log levels and formats.
+    This function sets up:
+    - Console logging for real-time development feedback.
+    - File-based logging with rotation:
+        - `error_file.log`: stores ERROR and CRITICAL logs.
+        - `info_file.log`: stores INFO and WARNING logs up to the specified max level.
+    - Custom formatting and log separation by severity.
+    - Automatic log directory creation.
 
-    **The design allows**:
-    - Traceability: Detailed logs include information such as module, function and line.
-    - Level separation: Error logs are stored in a separate file from informational logs.
-    - Log rotation: Log files are automatically rotated to avoid uncontrolled growth.
-
-    In addition, it ensures that the log directory exists before configuring the handlers.
+    Features:
+    - Traceability: Detailed logs include module, function, and line info.
+    - Log rotation: Prevents uncontrolled growth of log files.
+    - Level separation: Ensures clearer organization of log data.
 
     Args:
-        app(Flask): Flask application instance to attach the configured logger.
+        app (Flask): Flask application instance used for logger naming.
 
     Returns:
-        logging.Logger: The `app.logger` after applying dictConfig.
+        logging.Logger: The configured `app.logger`.
 
     Raises:
-        OSError: If log directory cannot be created.
+        OSError: If the log directory cannot be created.
     """
     
+    LOG_DIR = 'logs'
+
     # create the log directory if it doesn't exist
     try:
         os.makedirs('logs', exist_ok=True)
@@ -56,8 +65,6 @@ def configure_logging(app: Flask) -> logging.Logger:
         logging.basicConfig(level=logging.ERROR)
         logging.error(f"Error creating logs directory: {e}")
         raise
-
-    LOG_DIR = 'logs'
 
     # Configure the logging system
     dictConfig({
