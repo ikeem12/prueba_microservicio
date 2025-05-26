@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Enum
 
-from app import db
+from ..extensions import db
 
 class Order(db.Model):
     __tablename__ = 'orders'
