@@ -1,10 +1,10 @@
 from typing import Callable, Any
 
-from .exceptions import ComponentInitializationError
+from app.exceptions.internal_exceptions import ComponentInitializationError
 
-class SafeInit:
+class InitializationComponent:
     """
-    Utility class to perform safe, one-off initialization of application components.
+    Utility class to handle initalization of components.
 
     Executes a provided initialization function with its arguments during construction.
     If the initialization fails, it raises a ComponentInitializationError with context.
@@ -16,6 +16,9 @@ class SafeInit:
         _args (tuple): Positional arguments for the initialization function.
         _init_fn (Callable): The initialization function (e.g., db.init_app).
         _name (str): Human-readable name of the component, for error messages.
+
+    methods:
+        _run() -> None: Executes the initialization function with the provided arguments.
     """
     def __init__(self, *args: Any, init_fn: Callable[..., Any], name: str):
         self._args = args
@@ -24,12 +27,6 @@ class SafeInit:
         self._run()
 
     def _run(self) -> None:
-        """
-        Executes the initialization logic.
-
-        Calls the provided function with its arguments. If an exception occurs,
-        it wraps it in a ComponentInitializationError with the component name.
-        """
         try:
             self._init_fn(*self._args)
         except Exception as e:

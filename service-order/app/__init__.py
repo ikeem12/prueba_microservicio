@@ -6,8 +6,8 @@ from config import config
 from .extensions import db, migrate
 from .logger import setup_logging
 from .resources.api_v1 import api_bp
-from .utils.safe_init import SafeInit
-from .utils.exceptions import AppInitializationError, ComponentInitializationError, BlueprintRegistrationError
+from .utils.initialization_component import InitializationComponent
+from .exceptions.internal_exceptions import AppInitializationError, ComponentInitializationError, BlueprintRegistrationError
 
 def create_app() -> Flask:
     """
@@ -25,9 +25,11 @@ def create_app() -> Flask:
 
         Raises:
             AppInitializationError: If any critical step in the setup process fails.
+            BlueprintRegistrationError: If the API blueprint fails to register.
+            ComponentInitializationError: If any component fails to initialize properly.
     """
-    # initialize the Flask application
     app = Flask(__name__)
+    
     # Set up logging
     app_logger = setup_logging(app)
 
@@ -42,8 +44,8 @@ def create_app() -> Flask:
     app.config.from_object(cfg_class)
     
     try:
-        SafeInit(app, init_fn=db.init_app, name='Database')
-        SafeInit(app, init_fn=migrate.init_app, name='Migrate')
+        InitializationComponent(app, init_fn=db.init_app, name='Database')
+        InitializationComponent(app, db, init_fn=migrate.init_app, name='Migrate')
         app_logger.info("Components initialized successfully.")
     except ComponentInitializationError as cie:
         app_logger.critical("Failed to initialize application components: %s", cie)
