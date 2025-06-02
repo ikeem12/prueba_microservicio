@@ -23,7 +23,7 @@ class Order(db.Model):
             "customer_phone": self.customer_phone,
             "customer_email": self.customer_email,
             "id_product": self.id_product,
-            "delivery_date": self.delivery_date.isoformat(),
+            "delivery_date": self.delivery_date.strftime("%d-%m-%Y"),
             "status": self.status,
             "total_amount": self.total_amount
         }
