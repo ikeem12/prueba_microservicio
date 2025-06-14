@@ -4,29 +4,36 @@ from app.exceptions.internal_exceptions import ComponentInitializationError
 
 class InitializationComponent:
     """
-    Utility class to handle initalization of components.
+    Initializes a component in a controlled way and catches errors during its configuration.
 
-    Executes a provided initialization function with its arguments during construction.
-    If the initialization fails, it raises a ComponentInitializationError with context.
+    This class receives an initialization function (`init_fn`) and its arguments, 
+    executes it automatically upon instantiation and throws a custom exception 
+    (`ComponentInitializationError`) if something goes wrong.
 
-    This class delegates error handling to the caller, making it suitable for use in
-    controlled startup sequences (e.g., inside `create_app` functions).
+    Useful for initializing components such as databases, migrations or other critical 
+    services on startup of a Flask application.
 
-    Attributes:
-        _args (tuple): Positional arguments for the initialization function.
-        _init_fn (Callable): The initialization function (e.g., db.init_app).
-        _name (str): Human-readable name of the component, for error messages.
+    Args:
+        *args (Any): positional arguments to be passed to `init_fn`.
+        init_fn (Callable[..., Any]): Function responsible for initializing the component.
+        name (str): Component name (used in error messages for clarity).
 
-    methods:
-        _run() -> None: Executes the initialization function with the provided arguments.
+    Raises:
+        ComponentInitializationError: If `init_fn` throws an exception when executed.
     """
-    def __init__(self, *args: Any, init_fn: Callable[..., Any], name: str):
+    def __init__(self, *args: Any, init_fn: Callable[..., None], name: str) -> None:
         self._args = args
         self._init_fn = init_fn
         self._name = name
         self._run()
 
     def _run(self) -> None:
+        """
+        Executes the initialization function with the provided arguments.
+
+        If an error occurs during execution of `init_fn`, it throws `ComponentInitializationError`
+        with a contextualized message.
+        """
         try:
             self._init_fn(*self._args)
         except Exception as e:

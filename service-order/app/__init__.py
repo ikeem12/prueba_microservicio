@@ -3,30 +3,31 @@ import os
 from flask import Flask
 
 from config import config
-from .extensions import db, migrate
-from .logger import setup_logging
-from .resources.api_v1 import api_bp
-from .utils.initialization_component import InitializationComponent
+from .extensions import db, migrate, api
 from .exceptions.internal_exceptions import AppInitializationError, ComponentInitializationError, BlueprintRegistrationError
+from .logger import setup_logging
+from .resources.api_v1 import api_bp, register_resources
+from .repository.repository_order import RepositoryOrder
+from .services.ServiceOrder import ServiceOrder
+from .utils.initialization_component import InitializationComponent
 
 def create_app() -> Flask:
-    """
-        Application factory function that creates and configures the Flask app.
+    """"    
+    create and initialize the Flask application with configurations, components, and resources.
 
-        This function sets up the Flask application by:
-        - Loading environment-specific configuration.
-        - Configuring the logging system.
-        - Initializing core components such as the database and migrations.
-        - Registering API blueprints.
-        - Importing required models for SQLAlchemy registration.
+    This function follows the factory application pattern. It performs the following steps:
+    - Configures logging.
+    - Loads the configuration according to the environment defined by the environment variable APP_SETTINGS.
+    - Initializes components such as the database and migrations.
+    - Registers the API resources and the main blueprint.
 
-        Returns:
-            Flask: A fully configured Flask application instance ready to run.
+    Raises:
+        AppInitializationError: If the APP_SETTINGS variable is invalid.
+        ComponentInitializationError: If any component (DB, migrations) fails to initialize.
+        BlueprintRegistrationError: If an error occurs when registering API endpoints.
 
-        Raises:
-            AppInitializationError: If any critical step in the setup process fails.
-            BlueprintRegistrationError: If the API blueprint fails to register.
-            ComponentInitializationError: If any component fails to initialize properly.
+    Returns:
+        Flask: The fully configured instance of the Flask application.
     """
     app = Flask(__name__)
     
@@ -51,13 +52,17 @@ def create_app() -> Flask:
         app_logger.critical("Failed to initialize application components: %s", cie)
         raise 
 
+    from .models.model import Order
+
+    repository = RepositoryOrder(db.session, Order)
+    service = ServiceOrder(repository)
+
     try:
+        register_resources(api, service)
         app.register_blueprint(api_bp, url_prefix='/api/v1')
         app_logger.info("API blueprint registered successfully.")
     except Exception as e:
         app_logger.critical("Failed to register API blueprint: %s", e)
         raise BlueprintRegistrationError(f"Failed to register API blueprint: {e}")
-
-    from .models.model import Order
-
+    
     return app
