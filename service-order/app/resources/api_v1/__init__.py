@@ -32,7 +32,7 @@ def register_resources(api: Api, service: ServiceOrder) -> None:
     """
     from .OrderListResource import OrderListResource
     from .OrderDetailResource import OrderDetailResource
-    from app.schema.schema_order import SchemaOrderPost, SchemaOrderPut, OrderIdModel
+    from app.schema.schema_order import SchemaOrderPost, SchemaOrderPut, SchemaOrderId
 
     api.add_resource(
         OrderListResource, 
@@ -49,6 +49,6 @@ def register_resources(api: Api, service: ServiceOrder) -> None:
         resource_class_kwargs={
             'order_service': service, 
             'schema_put': SchemaOrderPut, 
-            'schema_id': OrderIdModel
+            'schema_id': SchemaOrderId
             }
     )
