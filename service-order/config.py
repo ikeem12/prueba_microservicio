@@ -3,7 +3,8 @@ import os
 class Config:
     DEBUG = False
     Testing = False
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:johancar12@localhost:3306/prueba_microservicios'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:johancar12@localhost:3306/prueba_microservicio_orders'
+    RATELIMIT_STORAGE_URI = 'redis://localhost:6379'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class developmentConfig(Config):
@@ -14,6 +15,7 @@ class TestingConfig(Config):
 
 class productionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI')
 
 config = {
     'development': developmentConfig,

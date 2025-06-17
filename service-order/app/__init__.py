@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from config import config
-from .extensions import db, migrate, api
+from .extensions import db, migrate, api, limiter
 from .exceptions.internal_exceptions import AppInitializationError, ComponentInitializationError, BlueprintRegistrationError
 from .logger import setup_logging
 from .resources.api_v1 import api_bp, register_resources
@@ -47,6 +47,7 @@ def create_app() -> Flask:
     try:
         InitializationComponent(app, init_fn=db.init_app, name='Database')
         InitializationComponent(app, db, init_fn=migrate.init_app, name='Migrate')
+        InitializationComponent(app, init_fn=limiter.init_app, name='Limiter')
         app_logger.info("Components initialized successfully.")
     except ComponentInitializationError as cie:
         app_logger.critical("Failed to initialize application components: %s", cie)

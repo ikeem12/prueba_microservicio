@@ -4,3 +4,7 @@ flask-sqlalchemy
 flask-migrate
 pymysql
 cryptography
+pydantic
+pydantic[email]
+flask-limiter
+flask-limiter[redis]
